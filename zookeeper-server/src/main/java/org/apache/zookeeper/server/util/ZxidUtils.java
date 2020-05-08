@@ -20,6 +20,13 @@ package org.apache.zookeeper.server.util;
 
 public class ZxidUtils {
 
+    /*
+
+    ZXID : 64bit
+    |--- 32bit 任期 ---|-- 32bit 事务计数器 --|
+
+     */
+
     public static long getEpochFromZxid(long zxid) {
         return zxid >> 32L;
     }

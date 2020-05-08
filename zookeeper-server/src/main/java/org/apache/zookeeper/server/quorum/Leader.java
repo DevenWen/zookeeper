@@ -1138,7 +1138,7 @@ public class Leader extends LearnerMaster {
 
     /**
      * Create a commit packet and send it to all the members of the quorum
-     *
+     *  向提案发送commit
      * @param zxid
      */
     public void commit(long zxid) {
@@ -1166,6 +1166,8 @@ public class Leader extends LearnerMaster {
 
     /**
      * Create an inform packet and send it to all observers.
+     *
+     * 发送给观察者
      */
     public void inform(Proposal proposal) {
         QuorumPacket qp = new QuorumPacket(Leader.INFORM, proposal.request.zxid, proposal.packet.getData(), null);
