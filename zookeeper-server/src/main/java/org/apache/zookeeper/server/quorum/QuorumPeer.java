@@ -1072,6 +1072,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         if (!getView().containsKey(myid)) {
             throw new RuntimeException("My id " + myid + " not in the peer list");
         }
+        // 加载 zkDataBase
         loadDataBase();
         startServerCnxnFactory();
         try {
@@ -1080,6 +1081,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             LOG.warn("Problem starting AdminServer", e);
             System.out.println(e);
         }
+        // 开始进行群首选举
         startLeaderElection();
         startJvmPauseMonitor();
         super.start();
@@ -1275,12 +1277,14 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         case 2:
             throw new UnsupportedOperationException("Election Algorithm 2 is not supported.");
         case 3:
+            // 构建集群通信连接器
             QuorumCnxManager qcm = createCnxnManager();
             QuorumCnxManager oldQcm = qcmRef.getAndSet(qcm);
             if (oldQcm != null) {
                 LOG.warn("Clobbering already-set QuorumCnxManager (restarting leader election?)");
                 oldQcm.halt();
             }
+            // fixme 暂不清楚这个
             QuorumCnxManager.Listener listener = qcm.listener;
             if (listener != null) {
                 listener.start();
@@ -2519,10 +2523,12 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         return vote != null && id == vote.getId();
     }
 
+
     @InterfaceAudience.Private
     /**
      * This is a metric that depends on the status of the peer.
-     */ public Integer getSynced_observers_metric() {
+     */
+    public Integer getSynced_observers_metric() {
         if (leader != null) {
             return leader.getObservingLearners().size();
         } else if (follower != null) {

@@ -20,19 +20,36 @@ package org.apache.zookeeper.server.util;
 
 public class ZxidUtils {
 
-    /*
-
-    ZXID : 64bit
-    |--- 32bit 任期 ---|-- 32bit 事务计数器 --|
-
+    /**
+     *
+     * ZXID : 64bit
+     * |--- 32bit 任期 ---|-- 32bit 事务计数器 --|
      */
 
+    /**
+     * 从 ZxId 获取 任期数
+     * @param zxid
+     * @return
+     */
     public static long getEpochFromZxid(long zxid) {
         return zxid >> 32L;
     }
+
+    /**
+     * 从 ZXID 获取 计数值
+     * @param zxid
+     * @return
+     */
     public static long getCounterFromZxid(long zxid) {
         return zxid & 0xffffffffL;
     }
+
+    /**
+     * 输入 epoch 和 counter ， 组合获得一个 long 类型的 ZXID
+     * @param epoch
+     * @param counter
+     * @return
+     */
     public static long makeZxid(long epoch, long counter) {
         return (epoch << 32L) | (counter & 0xffffffffL);
     }
