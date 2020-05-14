@@ -695,11 +695,12 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
     }
 
     protected void setupRequestProcessors() {
+        // 通过代理模式层层封装 Request 处理器
         RequestProcessor finalProcessor = new FinalRequestProcessor(this);
         RequestProcessor syncProcessor = new SyncRequestProcessor(this, finalProcessor);
-        ((SyncRequestProcessor) syncProcessor).start();
+        ((SyncRequestProcessor) syncProcessor).start();     // ZooKeeper 单线程 处理事务
         firstProcessor = new PrepRequestProcessor(this, syncProcessor);
-        ((PrepRequestProcessor) firstProcessor).start();
+        ((PrepRequestProcessor) firstProcessor).start();    // 单线程处理事务，处理完后，提交到下一个 Processor 的 Request 队列里，下一个继续消费
     }
 
     public ZooKeeperServerListener getZooKeeperServerListener() {

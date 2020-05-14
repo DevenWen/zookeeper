@@ -160,6 +160,7 @@ public abstract class ServerCnxnFactory {
     public static ServerCnxnFactory createFactory() throws IOException {
         String serverCnxnFactoryName = System.getProperty(ZOOKEEPER_SERVER_CNXN_FACTORY);
         if (serverCnxnFactoryName == null) {
+            // 模式使用 JDK 自带的 NIO 去实现 Factory
             serverCnxnFactoryName = NIOServerCnxnFactory.class.getName();
         }
         try {
