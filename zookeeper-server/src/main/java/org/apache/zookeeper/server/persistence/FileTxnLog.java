@@ -268,9 +268,11 @@ public class FileTxnLog implements TxnLog, Closeable {
 
     @Override
     public synchronized boolean append(TxnHeader hdr, Record txn, TxnDigest digest) throws IOException {
+        // 保证顺序一致性的落盘策略
         if (hdr == null) {
             return false;
         }
+        LOG.debug("源码阅读：FileTxnLog append Zxid:{} type:{}", hdr.getZxid(), hdr.getType());
         if (hdr.getZxid() <= lastZxidSeen) {
             LOG.warn(
                 "Current zxid {} is <= {} for {}",
@@ -301,6 +303,7 @@ public class FileTxnLog implements TxnLog, Closeable {
         }
         Checksum crc = makeChecksumAlgorithm();
         crc.update(buf, 0, buf.length);
+        // 把数据续写到的txn日志文件中
         oa.writeLong(crc.getValue(), "txnEntryCRC");
         Util.writeTxnBytes(oa, buf);
 

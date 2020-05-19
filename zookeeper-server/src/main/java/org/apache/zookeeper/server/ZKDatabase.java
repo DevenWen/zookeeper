@@ -76,6 +76,10 @@ public class ZKDatabase {
      */
     protected DataTree dataTree;
     protected ConcurrentHashMap<Long, Integer> sessionsWithTimeouts;
+
+    /**
+     * 日志文件，用于保存每次请求
+     */
     protected FileTxnSnapLog snapLog;
     protected long minCommittedLog, maxCommittedLog;
 
@@ -282,6 +286,10 @@ public class ZKDatabase {
      */
     public long loadDataBase() throws IOException {
         long startTime = Time.currentElapsedTime();
+
+        /**
+         * snapLog 的类是包括: 快照文件+事务文件的，restore 方法是通过两个文件还原数据，并返回最新的 zxid
+         */
         long zxid = snapLog.restore(dataTree, sessionsWithTimeouts, commitProposalPlaybackListener);
         initialized = true;
         long loadTime = Time.currentElapsedTime() - startTime;
@@ -479,7 +487,7 @@ public class ZKDatabase {
      * datatree/zkdatabase
      */
     public ProcessTxnResult processTxn(TxnHeader hdr, Record txn, TxnDigest digest) {
-        return dataTree.processTxn(hdr, txn, digest);
+        return dataTree.processTxn(hdr, txn, digest); // 处理事务
     }
 
     /**
@@ -632,6 +640,8 @@ public class ZKDatabase {
     }
 
     /**
+     * 直接记录 Request 的操作，写进日志中
+     *
      * append to the underlying transaction log
      * @param si the request to append
      * @return true if the append was succesfull and false if not

@@ -154,7 +154,7 @@ public class FinalRequestProcessor implements RequestProcessor {
         }
         ProcessTxnResult rc = null;
         if (!request.isThrottled()) {
-          rc = applyRequest(request);
+            rc = applyRequest(request);     // FinalRequestProcessor 从此处尝试处理请求
         }
         if (request.cnxn == null) {
             return;

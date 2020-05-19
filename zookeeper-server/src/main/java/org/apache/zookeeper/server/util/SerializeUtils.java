@@ -144,6 +144,13 @@ public class SerializeUtils {
         return new TxnLogEntry(txn, hdr, digest);
     }
 
+    /**
+     * 从 Snapshot 反序列化获得 DataTree
+     * @param dt
+     * @param ia
+     * @param sessions
+     * @throws IOException
+     */
     public static void deserializeSnapshot(DataTree dt, InputArchive ia, Map<Long, Integer> sessions) throws IOException {
         int count = ia.readInt("count");
         while (count > 0) {

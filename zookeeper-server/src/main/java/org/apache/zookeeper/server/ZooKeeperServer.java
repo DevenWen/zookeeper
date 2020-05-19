@@ -1725,7 +1725,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             return new ProcessTxnResult();
         }
         synchronized (outstandingChanges) {
-            ProcessTxnResult rc = processTxnInDB(hdr, request.getTxn(), request.getTxnDigest());
+            ProcessTxnResult rc = processTxnInDB(hdr, request.getTxn(), request.getTxnDigest());  // 把事务写进DB中
 
             // request.hdr is set for write requests, which are the only ones
             // that add to outstandingChanges.
@@ -1775,7 +1775,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         if (hdr == null) {
             return new ProcessTxnResult();
         } else {
-            return getZKDatabase().processTxn(hdr, txn, digest);
+            return getZKDatabase().processTxn(hdr, txn, digest); // 处理事务
         }
     }
 
