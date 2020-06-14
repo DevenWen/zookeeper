@@ -163,7 +163,9 @@ public class QuorumPeerMain {
             ServerCnxnFactory secureCnxnFactory = null;
 
             if (config.getClientPortAddress() != null) {
+                // ServerCnxnFactory 是一个抽象类，用于和客户端的对话连接，有 JDK NIO实现和 Netty 实现两种，默认使用 JDK NIO
                 cnxnFactory = ServerCnxnFactory.createFactory();
+                // 把网络配置从这里写入给 ServerCnxnFactory 开启网络配置
                 cnxnFactory.configure(config.getClientPortAddress(), config.getMaxClientCnxns(), config.getClientPortListenBacklog(), false);
             }
 

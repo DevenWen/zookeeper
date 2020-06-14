@@ -242,11 +242,14 @@ public class FileTxnSnapLog {
      */
     public long restore(DataTree dt, Map<Long, Integer> sessions, PlayBackListener listener) throws IOException {
         long snapLoadingStartTime = Time.currentElapsedTime();
+
+        // 通过快照文件 snapLog，反序列化 dataTree，并返回序列化的最大的 zxid 。
         long deserializeResult = snapLog.deserialize(dt, sessions);
         ServerMetrics.getMetrics().STARTUP_SNAP_LOAD_TIME.add(Time.currentElapsedTime() - snapLoadingStartTime);
         FileTxnLog txnLog = new FileTxnLog(dataDir);
         boolean trustEmptyDB;
         File initFile = new File(dataDir.getParent(), "initialize");
+
         if (Files.deleteIfExists(initFile.toPath())) {
             LOG.info("Initialize file found, an empty database will not block voting participation");
             trustEmptyDB = true;
@@ -255,6 +258,8 @@ public class FileTxnSnapLog {
         }
 
         RestoreFinalizer finalizer = () -> {
+
+            // 通过快照生成的 dataTree 有可能是落后与版本的，此时需要通过 事务日志 在快照的基础上，回放部分事务，并获得最新的数据
             long highestZxid = fastForwardFromEdits(dt, sessions, listener);
             // The snapshotZxidDigest will reset after replaying the txn of the
             // zxid in the snapshotZxidDigest, if it's not reset to null after
@@ -268,10 +273,11 @@ public class FileTxnSnapLog {
                         Long.toHexString(highestZxid),
                         Long.toHexString(snapshotZxidDigest.getZxid()));
             }
-            return highestZxid;
+            return highestZxid;     // 返回正在的，最大的 zxId
         };
 
         if (-1L == deserializeResult) {
+            // 找不到数据库，就尝试重新建造一个数据库
             /* this means that we couldn't find any snapshot, so we need to
              * initialize an empty database (reported in ZOOKEEPER-2325) */
             if (txnLog.getLastLoggedZxid() != -1) {
@@ -300,10 +306,12 @@ public class FileTxnSnapLog {
             }
         }
 
-        return finalizer.run();
+        return finalizer.run();     // 执行回放
     }
 
     /**
+     * 快速回放，在快照的基础上恢复数据
+     *
      * This function will fast forward the server database to have the latest
      * transactions in it.  This is the same as restore, but only reads from
      * the transaction logs and not restores from a snapshot.
@@ -318,6 +326,7 @@ public class FileTxnSnapLog {
         DataTree dt,
         Map<Long, Integer> sessions,
         PlayBackListener listener) throws IOException {
+        // 读取比 dt.lastProcessedZxid 更前的事务数据迭代器
         TxnIterator itr = txnLog.read(dt.lastProcessedZxid + 1);
         long highestZxid = dt.lastProcessedZxid;
         TxnHeader hdr;
@@ -349,7 +358,7 @@ public class FileTxnSnapLog {
                                           e);
                 }
                 listener.onTxnLoaded(hdr, itr.getTxn(), itr.getDigest());
-                if (!itr.next()) {
+                if (!itr.next()) {  // 一直迭代到最后
                     break;
                 }
             }

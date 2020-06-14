@@ -86,7 +86,7 @@ public class FileSnap implements SnapShot {
             snapZxid = Util.getZxidFromName(snap.getName(), SNAPSHOT_FILE_PREFIX);
             try (CheckedInputStream snapIS = SnapStream.getInputStream(snap)) {
                 InputArchive ia = BinaryInputArchive.getArchive(snapIS);
-                deserialize(dt, sessions, ia);
+                deserialize(dt, sessions, ia);      // 通过快照文件，反序列化树
                 SnapStream.checkSealIntegrity(snapIS, ia);
 
                 // Digest feature was added after the CRC to make it backward

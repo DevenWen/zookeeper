@@ -101,9 +101,16 @@ public class DataTree {
     /**
      * This map provides a fast lookup to the datanodes. The tree is the
      * source of truth and is where all the locking occurs
+     *
+     *
+     * 这就是一个普通的HashMap "/worker/w1/s" --> DataNode
+     *
      */
     private final NodeHashMap nodes;
 
+    /**
+     * 管理监视器
+     */
     private IWatchManager dataWatches;
 
     private IWatchManager childWatches;
@@ -139,6 +146,8 @@ public class DataTree {
     private static final String configChildZookeeper = configZookeeper.substring(procZookeeper.length() + 1);
 
     /**
+     * 前缀树，通过前缀树可以快速
+     *
      * the path trie that keeps track of the quota nodes in this datatree
      */
     private final PathTrie pTrie = new PathTrie();
@@ -678,7 +687,7 @@ public class DataTree {
         nodeDataSize.addAndGet(getNodeSize(path, data) - getNodeSize(path, lastdata));
 
         updateWriteStat(path, dataBytes);
-        dataWatches.triggerWatch(path, EventType.NodeDataChanged);
+        dataWatches.triggerWatch(path, EventType.NodeDataChanged);      // 通知监视器，path 路径的节点发生改变
         return s;
     }
 
@@ -864,7 +873,7 @@ public class DataTree {
     public volatile long lastProcessedZxid = 0;
 
     public ProcessTxnResult processTxn(TxnHeader header, Record txn, TxnDigest digest) {
-        ProcessTxnResult result = processTxn(header, txn);
+        ProcessTxnResult result = processTxn(header, txn);  // DataTree 尝试处理事务
         compareDigest(header, txn, digest);
         return result;
     }
@@ -875,6 +884,13 @@ public class DataTree {
 
     public ProcessTxnResult processTxn(TxnHeader header, Record txn, boolean isSubTxn) {
         ProcessTxnResult rc = new ProcessTxnResult();
+
+        /**
+         * 根据 TxnHeader 标记的的操作，执行对应的行为
+         * | header.getType|
+         *
+         *
+         */
 
         try {
             rc.clientId = header.getClientId();
@@ -1310,6 +1326,8 @@ public class DataTree {
     }
 
     /**
+     * 递归序列化 DataTree
+     *
      * this method uses a stringbuilder to create a new path for children. This
      * is faster than string appends ( str1 + str2).
      *
@@ -1373,6 +1391,12 @@ public class DataTree {
         serializeNodes(oa);
     }
 
+    /**
+     * 通过ia 获取数据元，生成DataTree
+     * @param ia
+     * @param tag
+     * @throws IOException
+     */
     public void deserialize(InputArchive ia, String tag) throws IOException {
         aclCache.deserialize(ia);
         nodes.clear();
