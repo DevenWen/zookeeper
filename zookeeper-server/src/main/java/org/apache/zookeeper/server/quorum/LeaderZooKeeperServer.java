@@ -63,6 +63,15 @@ public class LeaderZooKeeperServer extends QuorumZooKeeperServer {
 
     @Override
     protected void setupRequestProcessors() {
+        /*
+         * Leader 的 Request 处理责任链：
+         * 1、LeaderRequestProcessor
+         * 2、PreRequestProcessor
+         * 3、ProposalRequestProcessor
+         * 4、CommitProcessor
+         * 5、Leader.ToBeAppliedRequestProcessor
+         * 6、FinalRequestProcessor
+         */
         RequestProcessor finalProcessor = new FinalRequestProcessor(this);
         RequestProcessor toBeAppliedProcessor = new Leader.ToBeAppliedRequestProcessor(finalProcessor, getLeader());
         commitProcessor = new CommitProcessor(toBeAppliedProcessor, Long.toString(getServerId()), false, getZooKeeperServerListener());

@@ -576,6 +576,11 @@ public class Leader extends LearnerMaster {
      * @throws InterruptedException
      */
     void lead() throws IOException, InterruptedException {
+        /*
+         * 作为一个 Leader 节点应该出的工作
+         */
+
+        // * 记录本次 选举 使用的时间
         self.end_fle = Time.currentElapsedTime();
         long electionTimeTaken = self.end_fle - self.start_fle;
         self.setElectionTimeTaken(electionTimeTaken);
@@ -589,6 +594,8 @@ public class Leader extends LearnerMaster {
         try {
             self.setZabState(QuorumPeer.ZabState.DISCOVERY);
             self.tick.set(0);
+
+            // 加载 zk 数据，也就是节点启动时，一定是先完成集群的接入。从 LOOKING 状态转为 FOLLOWING 或 LEADING 状态
             zk.loadData();
 
             leaderStateSummary = new StateSummary(self.getCurrentEpoch(), zk.getLastProcessedZxid());
@@ -1021,9 +1028,9 @@ public class Leader extends LearnerMaster {
             p.request.logLatency(ServerMetrics.getMetrics().ACK_LATENCY, Long.toString(sid));
         }
 
-        p.addAck(sid);
+        p.addAck(sid);      // 增加一个 ACK 消息
 
-        boolean hasCommitted = tryToCommit(p, zxid, followerAddr);
+        boolean hasCommitted = tryToCommit(p, zxid, followerAddr);  // 尝试 COMMIT
 
         // If p is a reconfiguration, multiple other operations may be ready to be committed,
         // since operations wait for different sets of acks.
@@ -1046,6 +1053,9 @@ public class Leader extends LearnerMaster {
         }
     }
 
+    /**
+     *
+     */
     static class ToBeAppliedRequestProcessor implements RequestProcessor {
 
         private final RequestProcessor next;
@@ -1113,6 +1123,8 @@ public class Leader extends LearnerMaster {
 
     /**
      * send a packet to all the followers ready to follow
+     *
+     * Leader sendPacket ，即发送给他所有的追随者
      *
      * @param qp
      *                the packet to be sent
@@ -1218,6 +1230,8 @@ public class Leader extends LearnerMaster {
     /**
      * create a proposal and send it out to all the members
      *
+     * 根据一个 Request 创建一个提案
+     *
      * @param request
      * @return the proposal that is queued to send to all the members
      */
@@ -1236,6 +1250,7 @@ public class Leader extends LearnerMaster {
             throw new XidRolloverException(msg);
         }
 
+        // 构建一个 QuorumPacket 仲裁包
         byte[] data = SerializeUtils.serializeRequest(request);
         proposalStats.setLastBufferSize(data.length);
         QuorumPacket pp = new QuorumPacket(Leader.PROPOSAL, request.zxid, data, null);
@@ -1255,10 +1270,12 @@ public class Leader extends LearnerMaster {
                 p.addQuorumVerifier(self.getLastSeenQuorumVerifier());
             }
 
-            LOG.debug("Proposing:: {}", request);
+            // 发起一次提案
+            LOG.debug("发起提案：Proposing:: {}", request);
 
             lastProposed = p.packet.getZxid();
             outstandingProposals.put(lastProposed, p);
+            // 发送给所有 Follower
             sendPacket(pp);
         }
         ServerMetrics.getMetrics().PROPOSAL_COUNT.add(1);
@@ -1270,7 +1287,6 @@ public class Leader extends LearnerMaster {
      *
      * @param r the request
      */
-
     public synchronized void processSync(LearnerSyncRequest r) {
         if (outstandingProposals.isEmpty()) {
             sendSync(r);

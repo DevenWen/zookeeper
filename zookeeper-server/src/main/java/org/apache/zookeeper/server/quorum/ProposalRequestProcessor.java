@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 提案处理器，专门帮忙转发请求到 ACK 处理器 和 Sync 同步处理器的。
+ *
  * This RequestProcessor simply forwards requests to an AckRequestProcessor and
  * SyncRequestProcessor.
  */
@@ -53,6 +55,12 @@ public class ProposalRequestProcessor implements RequestProcessor {
         syncProcessor.start();
     }
 
+    /**
+     * 这是一个提案专用的处理器
+     *
+     * @param request
+     * @throws RequestProcessorException
+     */
     public void processRequest(Request request) throws RequestProcessorException {
         // LOG.warn("Ack>>> cxid = " + request.cxid + " type = " +
         // request.type + " id = " + request.sessionId);
@@ -72,6 +80,7 @@ public class ProposalRequestProcessor implements RequestProcessor {
         } else {
             nextProcessor.processRequest(request);
             if (request.getHdr() != null) {
+                // 这里假如是一个 事务 类型的 Transactions，就需要执行集群同步。
                 // We need to sync and get consensus on any transactions
                 try {
                     zks.getLeader().propose(request);

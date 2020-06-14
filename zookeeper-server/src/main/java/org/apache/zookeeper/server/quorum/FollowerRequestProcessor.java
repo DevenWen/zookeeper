@@ -60,6 +60,9 @@ public class FollowerRequestProcessor extends ZooKeeperCriticalThread implements
                 skipLearnerRequestToNextProcessor);
     }
 
+    /**
+     * 数据处理入口
+     */
     @Override
     public void run() {
         try {
@@ -91,6 +94,7 @@ public class FollowerRequestProcessor extends ZooKeeperCriticalThread implements
                 // path, but different from others, we need to keep track
                 // of the sync operations this follower has pending, so we
                 // add it to pendingSyncs.
+                // 转发 Request 到 Leader 处
                 switch (request.type) {
                 case OpCode.sync:
                     zks.pendingSyncs.add(request);
@@ -107,7 +111,7 @@ public class FollowerRequestProcessor extends ZooKeeperCriticalThread implements
                 case OpCode.setACL:
                 case OpCode.multi:
                 case OpCode.check:
-                    zks.getFollower().request(request);
+                    zks.getFollower().request(request);     // 以上枚举的请求都会被转发到服务器中
                     break;
                 case OpCode.createSession:
                 case OpCode.closeSession:

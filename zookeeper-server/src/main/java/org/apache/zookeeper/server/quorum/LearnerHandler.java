@@ -58,6 +58,11 @@ import org.slf4j.LoggerFactory;
  * There will be an instance of this class created by the Leader for each
  * learner. All communication with a learner is handled by this
  * class.
+ *
+ *
+ * 这是 Learner 的抽象层，是面向 Leader 负责的，就像每一个 追随者 都作为一个抽象对象写在 Leader 的节点中。
+ * 1、本身是一个 Thread，接受 Leader 递交的 Request
+ * 2、
  */
 public class LearnerHandler extends ZooKeeperThread {
 
@@ -665,7 +670,7 @@ public class LearnerHandler extends ZooKeeperThread {
                         LOG.debug("Received ACK from Observer {}", this.sid);
                     }
                     syncLimitCheck.updateAck(qp.getZxid());
-                    learnerMaster.processAck(this.sid, qp.getZxid(), sock.getLocalSocketAddress());
+                    learnerMaster.processAck(this.sid, qp.getZxid(), sock.getLocalSocketAddress()); // 从这里切入
                     break;
                 case Leader.PING:
                     // Process the touches

@@ -220,7 +220,7 @@ public class CommitProcessor extends ZooKeeperCriticalThread implements RequestP
                     // Waiting for requests to process
                     synchronized (this) {
                         while (!stopped && requestsToProcess == 0 && !commitIsWaiting) {
-                            wait();
+                            wait();     // 阻塞，等待处理
                             commitIsWaiting = !committedRequests.isEmpty();
                             requestsToProcess = queuedRequests.size();
                         }

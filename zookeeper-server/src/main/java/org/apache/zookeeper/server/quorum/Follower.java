@@ -160,7 +160,8 @@ public class Follower extends Learner {
         case Leader.PING:
             ping(qp);
             break;
-        case Leader.PROPOSAL:
+        case Leader.PROPOSAL:       // 收到提案
+            LOG.info("收到提案, {}",  LearnerHandler.packetToString(qp));
             ServerMetrics.getMetrics().LEARNER_PROPOSAL_RECEIVED_COUNT.add(1);
             TxnLogEntry logEntry = SerializeUtils.deserializeTxn(qp.getData());
             TxnHeader hdr = logEntry.getHeader();
@@ -199,7 +200,7 @@ public class Follower extends Learner {
                 ServerMetrics.getMetrics().OM_PROPOSAL_PROCESS_TIME.add(Time.currentElapsedTime() - startTime);
             }
             break;
-        case Leader.COMMIT:
+        case Leader.COMMIT:     // 收到提交
             ServerMetrics.getMetrics().LEARNER_COMMIT_RECEIVED_COUNT.add(1);
             fzk.commit(qp.getZxid());
             if (om != null) {
@@ -239,6 +240,7 @@ public class Follower extends Learner {
             }
             break;
         case Leader.SYNC:
+            LOG.info("收到同步包 SYNC {}", LearnerHandler.packetToString(qp));
             fzk.sync();
             break;
         default:
